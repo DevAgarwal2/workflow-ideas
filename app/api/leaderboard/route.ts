@@ -3,8 +3,44 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+type TopIdea = {
+  id: number;
+  idea: string;
+  votes: number;
+  complexity: string;
+  use_case: string;
+  category_id: string;
+  category_name: string;
+  category_color: string;
+};
+
+type MostVotedIdea = {
+  id: number;
+  idea: string;
+  votes: number;
+  total_votes: number;
+  up_votes: number;
+  down_votes: number;
+  category_name: string;
+  category_color: string;
+};
+
+type CategoryStat = {
+  category_id: string;
+  category_name: string;
+  category_color: string;
+  total_votes: number;
+  avg_votes: number;
+};
+
+type LeaderboardData = {
+  topIdeas: TopIdea[];
+  mostVoted: MostVotedIdea[];
+  categoryStats: CategoryStat[];
+};
+
 // Cache for leaderboard
-let leaderboardCache: { data: any | null; timestamp: number } = {
+let leaderboardCache: { data: LeaderboardData | null; timestamp: number } = {
   data: null,
   timestamp: 0,
 };
@@ -63,14 +99,20 @@ export async function GET() {
       },
     });
 
-    const mostVoted = workflowsWithVoteCounts
-      .map((w) => ({
+    const mostVoted: MostVotedIdea[] = workflowsWithVoteCounts
+      .map((w: {
+        id: number;
+        idea: string;
+        votes: number;
+        category: { name: string; color: string };
+        voteRecords: { voteType: string }[];
+      }) => ({
         id: w.id,
         idea: w.idea,
         votes: w.votes,
         total_votes: w.voteRecords.length,
-        up_votes: w.voteRecords.filter((v) => v.voteType === "up").length,
-        down_votes: w.voteRecords.filter((v) => v.voteType === "down").length,
+        up_votes: w.voteRecords.filter((v: { voteType: string }) => v.voteType === "up").length,
+        down_votes: w.voteRecords.filter((v: { voteType: string }) => v.voteType === "down").length,
         category_name: w.category.name,
         category_color: w.category.color,
       }))
@@ -92,9 +134,17 @@ export async function GET() {
       },
     });
 
-    const categoryStats = categories
-      .map((cat) => {
-        const totalVotes = cat.workflows.reduce((sum, w) => sum + w.votes, 0);
+    const categoryStats: CategoryStat[] = categories
+      .map((cat: {
+        id: string;
+        name: string;
+        color: string;
+        workflows: { votes: number }[];
+      }) => {
+        const totalVotes = cat.workflows.reduce(
+          (sum: number, w: { votes: number }) => sum + w.votes,
+          0
+        );
         const avgVotes = cat.workflows.length > 0
           ? Math.round((totalVotes / cat.workflows.length) * 10) / 10
           : 0;
@@ -109,7 +159,15 @@ export async function GET() {
       .sort((a, b) => b.total_votes - a.total_votes);
 
     // Transform topIdeas response
-    const transformedTopIdeas = topIdeas.map((idea) => ({
+    const transformedTopIdeas: TopIdea[] = topIdeas.map((idea: {
+      id: number;
+      idea: string;
+      votes: number;
+      complexity: string;
+      useCase: string;
+      categoryId: string;
+      category: { name: string; color: string };
+    }) => ({
       id: idea.id,
       idea: idea.idea,
       votes: idea.votes,
@@ -120,7 +178,7 @@ export async function GET() {
       category_color: idea.category.color,
     }));
 
-    const data = {
+    const data: LeaderboardData = {
       topIdeas: transformedTopIdeas,
       mostVoted,
       categoryStats,

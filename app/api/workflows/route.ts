@@ -3,9 +3,20 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+// Type for transformed workflow
+type TransformedWorkflow = {
+  id: number;
+  category_id: string;
+  idea: string;
+  complexity: string;
+  use_case: string;
+  platforms: string;
+  votes: number;
+};
+
 // In-memory cache
 let workflowsCache: {
-  data: Map<string, { workflows: any[]; total: number; timestamp: number }>;
+  data: Map<string, { workflows: TransformedWorkflow[]; total: number; timestamp: number }>;
 } = { data: new Map() };
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -74,7 +85,15 @@ export async function GET(request: Request) {
     ]);
 
     // Transform to match expected API response format
-    const transformedWorkflows = workflows.map((w) => ({
+    const transformedWorkflows: TransformedWorkflow[] = workflows.map((w: {
+      id: number;
+      categoryId: string;
+      idea: string;
+      complexity: string;
+      useCase: string;
+      platforms: string;
+      votes: number;
+    }) => ({
       id: w.id,
       category_id: w.categoryId,
       idea: w.idea,
