@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  id        String     @id
+  name      String
+  color     String
+  workflows Workflow[]
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  @@map("categories")
+}
+
+model Workflow {
+  id          Int      @id @default(autoincrement())
+  idea        String   @unique
+  complexity  String
+  useCase     String   @map("use_case")
+  platforms   String
+  votes       Int      @default(0)
+  categoryId  String   @map("category_id")
+  category    Category @relation(fields: [categoryId], references: [id])
+  voteRecords Vote[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("workflows")
+  @@index([categoryId])
+  @@index([votes])
+}
+
+model Vote {
+  id         Int      @id @default(autoincrement())
+  workflowId Int      @map("workflow_id")
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  voteType   String   @map("vote_type") // "up" or "down"
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("votes")
+  @@index([workflowId])
+}
