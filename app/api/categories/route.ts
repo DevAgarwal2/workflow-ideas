@@ -3,8 +3,16 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+// Type for category with workflow count
+type CategoryWithCount = {
+  id: string;
+  name: string;
+  color: string;
+  count: number;
+};
+
 // In-memory cache for categories
-let categoriesCache: { data: any[] | null; timestamp: number } = {
+let categoriesCache: { data: CategoryWithCount[] | null; timestamp: number } = {
   data: null,
   timestamp: 0,
 };
@@ -41,8 +49,8 @@ export async function GET() {
       "shape-shift", "content-machine", "watchdog", "swarm",
     ];
 
-    const sortedCategories = categories
-      .map((cat) => ({
+    const sortedCategories: CategoryWithCount[] = categories
+      .map((cat: { id: string; name: string; color: string; _count: { workflows: number } }) => ({
         id: cat.id,
         name: cat.name,
         color: cat.color,
