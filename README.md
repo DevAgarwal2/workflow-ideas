@@ -41,6 +41,10 @@ A Tinder-style voting app for workflow automation ideas. Swipe right to like, le
    npm run dev
    ```
 
+## Safety Checks
+
+- Run `npm run scan:secrets` before pushing to catch common credential leaks in tracked files.
+
 ## API Endpoints
 
 - `GET /api/workflows` - Fetch workflows (supports `category`, `limit`, `offset`)
